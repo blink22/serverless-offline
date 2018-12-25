@@ -23,6 +23,7 @@ const functionHelper = require('./functionHelper');
 const Endpoint = require('./Endpoint');
 const parseResources = require('./parseResources');
 const utils = require('./utils');
+const jwt = require('jsonwebtoken');
 
 const isNestedString = RegExp.prototype.test.bind(/^'.*?'$/);
 
@@ -625,6 +626,25 @@ class Offline {
             else if (integration !== 'lambda-proxy') {
               event.stageVariables = {};
             }
+
+            try {
+              const headers = request.unprocessedHeaders;
+              let token = headers.Authorization || headers.authorization;
+              if (token && token.split(' ')[0] === 'Bearer') {
+                token = token.split(' ')[1];
+              }
+              event.cognitoPoolClaims = jwt.decode(token) || undefined;
+              console.log('=====================[OFFLINE]==========================');
+              console.log(event);
+              console.log('================================================');
+            }
+            catch (e) {
+              console.log('=====================[OFFLINE][ERROR]==========================');
+              console.log('could add cognitoPoolClaims to your event');
+              console.log(e);
+              console.log('================================================');
+            }
+
 
             debugLog('event:', event);
 
